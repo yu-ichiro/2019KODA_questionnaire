@@ -64,7 +64,7 @@ def questionnaire():
                 'id': _id,
                 'name': songs[int(_id)][0],
                 'reason': request.form.get('reason_' + _id, ''),
-                'double': request.form.get('second_vote', None) == _id
+                'vote_num': 2 if request.form.get('second_vote', None) == _id else 1
             }
             for _id in request.form.getlist('first_vote')
         ]
