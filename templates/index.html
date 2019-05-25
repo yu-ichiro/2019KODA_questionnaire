@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>投票</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <!--suppress SpellCheckingInspection -->
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <!--suppress SpellCheckingInspection -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <!--suppress SpellCheckingInspection -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <!--suppress SpellCheckingInspection -->
+  <script src="https://unpkg.com/vue@2.6.10/dist/vue.min.js"></script>
+</head>
+<body>
+<div id="content"></div>
+<script>
+  let songs = {{ songs | safe }};
+  Vue.options.delimiters = ['{', '}'];
+
+  new Vue({
+    el: '#content',
+    data: function() {
+      return {
+        songs: (function (_songs){
+          return _songs.map(function (song, index) {
+            return {
+              name: song[0],
+              show: song[1],
+              checked: false,
+              index: index
+            }
+          })
+        })(songs)
+      };
+    },
+    template: '' +
+      '<div v-for="song in songs" v-if="song.show">' +
+      '  <label>' +
+      '    <input type="checkbox" name="first_vote" :value="song.index">' +
+      '    { song.name }' +
+      '  </label><br>' +
+      '  <div class="song-detail" v-if="song.checked">' +
+      '    <label>' +
+      '      <input type="checkbox" name="first_vote" :value="song.index">' +
+      '      二票目を投票する' +
+      '    </label><br>' +
+      '  </div>' +
+      '</div>'
+  });
+</script>
+</body>
+</html>
