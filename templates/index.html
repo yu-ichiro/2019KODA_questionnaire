@@ -17,19 +17,36 @@
     .vspace {
       height: 20px;
     }
+    
+    .checked {
+      background-color: rgba(0, 255, 0, 0.3);
+      padding: 10px;
+      border: solid 2px rgb(0,178,100);
+      border-radius: 5px
+    }
   </style>
 </head>
 <body>
-<div class="container">
-  <h1 style="text-align: center; font-size: 6vw">KODA祭2019　ステージ投票</h1>
-  <br>
+<header style="position: fixed; background-color: white; width: 100%">
+<h1 style="text-align: center; font-size: 6vw">KODA祭2019　ステージ投票</h1>
+<div id="votes_left" style="text-align: center"></div>
+</header>
+<section class="container">
+  <div class="vspace"></div>
+  <div class="vspace"></div>
+  <div class="vspace"></div>
   <div id="content"></div>
-</div>
+</section>
 <script>
-  let songs = {{ songs | safe }};
+  const limit = 6;
+  const songs = {{ songs | safe }};
   Vue.options.delimiters = ['{', '}'];
+  
+  $(function () {
+      $('#votes_left').text('残り'+limit+'票');
+  });
 
-  let content = new Vue({
+  const content = new Vue({
     el: '#content',
     data: function() {
       return {
@@ -45,16 +62,23 @@
           })
         })(songs),
         select_count: 0,
+        votes_left: limit,
         errors: [],
       };
     },
     methods: {
+      update: function () {
+        this.$nextTick(function () {
+          this.votes_left = limit - this.select_count - (!isNaN(parseInt($('input[name="second_vote"]:checked').val())) ? 1 : 0);
+          $('#votes_left').text('残り'+this.votes_left+'票');
+        });
+      },
       check: function (e) {
         const before_checked = $(e.target).prop('checked');
 
         if (before_checked) {
-          if (this.select_count === 6) {
-            alert('6曲以上選択することはできません');
+          if (this.select_count === limit) {
+            alert(limit + '曲以上選択することはできません');
             e.preventDefault();
             return
           }
@@ -62,6 +86,7 @@
         } else {
           this.select_count -= 1;
         }
+        this.update();
       },
       submit: function () {
         const self = this;
@@ -70,7 +95,7 @@
         }).map(function(song) {
           return {
             name: song.name,
-            reason: song.reason !== '' ? song.reason : '(未入力)',
+            reason: song.reason !== '' ? song.reason : '(未入力😢)',
             double: $('input[name="second_vote"]:checked').val() === String(song.index)
           }
         }).map(function (vote) {
@@ -78,12 +103,12 @@
             return '曲：' + vote.name + '[2票]\n理由：' + vote.reason + '\n\n';
           else
             return '曲：' + vote.name + '\n理由：' + vote.reason + '\n\n';
-        });
+        }).join('');
         const confirm = window.confirm('以下の内容で投票します。よろしいですか？\n\n' + vote_string);
         if (!confirm) {return}
         const vote_count = self.select_count + (
           !isNaN(parseInt($('input[name="second_vote"]:checked').val())) ? 1 : 0);
-        const count_check = vote_count === 6 || window.confirm(vote_count + '票しか使っていません。(一人6票)\nこのまま投票しますか？');
+        const count_check = vote_count === self.limit || window.confirm(vote_count + '票しか使っていません。(一人' + limit + '票)\nこのまま投票しますか？');
         if (confirm && count_check) {
           $.ajax({
             url: location.href,
@@ -104,19 +129,18 @@
       '  <div class="alert alert-danger hidden" id="error" v-if="errors.length > 0">' +
       '    <span v-for="error in errors">{ error }</span>' +
       '  </div>' +
-      '  <div v-for="song in songs">' +
-      '    <div v-if="song.show">' +
+      '  <div v-for="song in songs" :style="{margin: \'5px\'}">' +
+      '    <div v-if="song.show" :class="{checked: song.checked}">' +
       '      <label>' +
       '        <input type="checkbox" name="first_vote" :value="song.index" v-model="song.checked" @click="check($event)">' +
       '        { song.name }' +
       '      </label><br>' +
       '      <div class="song-detail" v-show="song.checked">' +
       '        <input class="form-control" type="text" :name="\'reason_\' + song.index" v-if="song.checked" v-model="song.reason" placeholder="選んだ理由">' +
-      '        <label v-if="select_count < 6">' +
-      '          <input type="radio" name="second_vote" v-if="song.checked" :value="song.index">' +
+      '        <label v-if="select_count < ' + limit + '">' +
+      '          <input type="radio" name="second_vote" v-if="song.checked" :value="song.index" @click="update">' +
       '          二票いれる' +
       '        </label>' +
-      '        <br>' +
       '      </div>' +
       '    </div>' +
       '    <div class="vspace" v-if="!song.show && song.name == \'----\'"></div>' +

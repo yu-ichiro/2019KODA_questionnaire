@@ -59,24 +59,28 @@ def questionnaire():
     if request.method == 'GET':
         return render_template('index.html', songs=json.dumps(songs))
     if request.method == 'POST':
-        votes = [
-            {
-                'id': _id,
-                'name': songs[int(_id)][0],
-                'reason': request.form.get('reason_' + _id, ''),
-                'vote_num': 2 if request.form.get('second_vote', None) == _id else 1
-            }
-            for _id in request.form.getlist('first_vote')
-        ]
-        file_path = 'votes/vote_{}.json'.format(session['id'])
-        if os.path.exists(file_path):
-            return jsonify({'status': 'error', 'errors': ['投票済みです']})
-        with open(file_path, 'w') as fp:
-            for vote in votes:
-                json.dump(vote, fp, ensure_ascii=False)
-                fp.write('\n')
-        return jsonify({'status': 'success'})
+        try:
+            votes = [
+                {
+                    'id': _id,
+                    'name': songs[int(_id)][0],
+                    'reason': request.form.get('reason_' + _id, ''),
+                    'vote_num': 2 if request.form.get('second_vote', None) == _id else 1
+                }
+                for _id in request.form.getlist('first_vote')
+            ]
+            file_path = 'votes/vote_{}.json'.format(session['id'])
+            if os.path.exists(file_path):
+                return jsonify({'status': 'error', 'errors': ['投票済みです']})
+            with open(file_path, 'w') as fp:
+                for vote in votes:
+                    json.dump(vote, fp, ensure_ascii=False)
+                    fp.write('\n')
+            return jsonify({'status': 'success'})
+        except Exception as e:
+            print(e)
+            return jsonify({'status': 'error', 'errors': ['サーバーでエラーが発生しました。スミスを殴ってください。']})
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=8000)
