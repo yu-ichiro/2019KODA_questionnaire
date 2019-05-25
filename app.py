@@ -72,7 +72,8 @@ def questionnaire():
         if os.path.exists(file_path):
             return jsonify({'status': 'error', 'errors': ['投票済みです']})
         with open(file_path, 'w') as fp:
-            json.dump(votes, fp, ensure_ascii=False)
+            for vote in votes:
+                json.dump(vote, fp, ensure_ascii=False)
         return jsonify({'status': 'success'})
 
 
