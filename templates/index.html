@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>投票</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <!--suppress SpellCheckingInspection -->
@@ -20,7 +21,8 @@
 </head>
 <body>
 <div class="container">
-  <h1 style="text-align: center">KODA祭2019　ステージ投票</h1>
+  <h1 style="text-align: center; font-size: 6vw">KODA祭2019　ステージ投票</h1>
+  <br>
   <div id="content"></div>
 </div>
 <script>
@@ -111,7 +113,7 @@
       '      <div class="song-detail" v-show="song.checked">' +
       '        <input class="form-control" type="text" :name="\'reason_\' + song.index" v-if="song.checked" v-model="song.reason" placeholder="選んだ理由">' +
       '        <label v-if="select_count < 6">' +
-      '          <input type="radio" name="second_vote" :value="song.index">' +
+      '          <input type="radio" name="second_vote" v-if="song.checked" :value="song.index">' +
       '          二票いれる' +
       '        </label>' +
       '        <br>' +
