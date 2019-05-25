@@ -54,7 +54,6 @@ def questionnaire():
         ("----", False),
         ("東へ西へ／井上陽水", True),
         ("たらればわたがし / Unison Square Garden", True),
-
     ]
     if request.method == 'GET':
         return render_template('index.html', songs=json.dumps(songs))

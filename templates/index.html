@@ -116,7 +116,8 @@
             data: $('#main_form').serialize()
           }).done(function (res) {
             if (res.status === 'success') {
-              alert('投票が完了しました')
+              alert('投票が完了しました');
+              self.errors = [];
             } else {
               self.errors = res.errors;
             }
