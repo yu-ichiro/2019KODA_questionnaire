@@ -74,6 +74,7 @@ def questionnaire():
         with open(file_path, 'w') as fp:
             for vote in votes:
                 json.dump(vote, fp, ensure_ascii=False)
+                fp.write('\n')
         return jsonify({'status': 'success'})
 
 
