@@ -11,15 +11,18 @@
   <!--suppress SpellCheckingInspection -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
   <!--suppress SpellCheckingInspection -->
-  <script src="https://unpkg.com/vue@2.6.10/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/vue@2.6.10"></script>
 </head>
 <body>
-<div id="content"></div>
+<div class="container">
+  <h1 style="text-align: center">KODA祭2019　ステージ投票</h1>
+  <div id="content"></div>
+</div>
 <script>
   let songs = {{ songs | safe }};
   Vue.options.delimiters = ['{', '}'];
 
-  new Vue({
+  let content = new Vue({
     el: '#content',
     data: function() {
       return {
@@ -36,16 +39,18 @@
       };
     },
     template: '' +
-      '<div v-for="song in songs" v-if="song.show">' +
-      '  <label>' +
-      '    <input type="checkbox" name="first_vote" :value="song.index">' +
-      '    { song.name }' +
-      '  </label><br>' +
-      '  <div class="song-detail" v-if="song.checked">' +
+      '<div>' +
+      '  <div v-for="song in songs" v-if="song.show">' +
       '    <label>' +
-      '      <input type="checkbox" name="first_vote" :value="song.index">' +
-      '      二票目を投票する' +
+      '      <input type="checkbox" name="first_vote" :value="song.index" v-model="song.checked">' +
+      '      { song.name }' +
       '    </label><br>' +
+      '    <div class="song-detail" v-show="song.checked">' +
+      '      <label>' +
+      '        <input type="radio" name="second_vote" :value="song.index">' +
+      '        二票目' +
+      '      </label><br>' +
+      '    </div>' +
       '  </div>' +
       '</div>'
   });
