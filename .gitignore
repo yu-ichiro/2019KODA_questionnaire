@@ -1,4 +1,4 @@
 .mypy_cache
 .idea
 .DS_store
-votes
+votes/vote_*.json
