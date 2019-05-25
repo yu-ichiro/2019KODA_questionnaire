@@ -1,12 +1,18 @@
 import json
+from datetime import datetime
 
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify, session
+import os
+import hashlib
 
 app = Flask(__name__)
+app.secret_key = 'unplugged'
 
 
 @app.route('/', methods=['GET', 'POST'])
 def questionnaire():
+    if session.get('id', None) is None:
+        session['id'] = hashlib.sha512(str(datetime.now()).encode()).digest().hex()[:64]
     songs = [
         ("季節は次々死んでいく / amazarashi", True),
         ("----", False),
@@ -53,7 +59,21 @@ def questionnaire():
     if request.method == 'GET':
         return render_template('index.html', songs=json.dumps(songs))
     if request.method == 'POST':
-        pass
+        votes = [
+            {
+                'id': _id,
+                'name': songs[int(_id)][0],
+                'reason': request.form.get('reason_' + _id, ''),
+                'double': request.form.get('second_vote', None) == _id
+            }
+            for _id in request.form.getlist('first_vote')
+        ]
+        file_path = 'votes/vote_{}.json'.format(session['id'])
+        if os.path.exists(file_path):
+            return jsonify({'status': 'error', 'errors': ['投票済みです']})
+        with open(file_path, 'w') as fp:
+            json.dump(votes, fp, ensure_ascii=False)
+        return jsonify({'status': 'success'})
 
 
 if __name__ == '__main__':

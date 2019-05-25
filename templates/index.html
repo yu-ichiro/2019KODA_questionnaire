@@ -5,13 +5,18 @@
   <title>投票</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <!--suppress SpellCheckingInspection -->
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
   <!--suppress SpellCheckingInspection -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <!--suppress SpellCheckingInspection -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
   <!--suppress SpellCheckingInspection -->
   <script src="https://unpkg.com/vue@2.6.10"></script>
+  <style>
+    .vspace {
+      height: 20px;
+    }
+  </style>
 </head>
 <body>
 <div class="container">
@@ -32,27 +37,90 @@
               name: song[0],
               show: song[1],
               checked: false,
-              index: index
+              index: index,
+              reason: '',
             }
           })
-        })(songs)
+        })(songs),
+        select_count: 0,
+        errors: [],
       };
     },
+    methods: {
+      check: function (e) {
+        const before_checked = $(e.target).prop('checked');
+
+        if (before_checked) {
+          if (this.select_count === 6) {
+            alert('6曲以上選択することはできません');
+            e.preventDefault();
+            return
+          }
+          this.select_count += 1;
+        } else {
+          this.select_count -= 1;
+        }
+      },
+      submit: function () {
+        const self = this;
+        const vote_string = self.songs.filter(function(song) {
+          return song.checked
+        }).map(function(song) {
+          return {
+            name: song.name,
+            reason: song.reason !== '' ? song.reason : '(未入力)',
+            double: $('input[name="second_vote"]:checked').val() === String(song.index)
+          }
+        }).map(function (vote) {
+          if (vote.double)
+            return '曲：' + vote.name + '[2票]\n理由：' + vote.reason + '\n\n';
+          else
+            return '曲：' + vote.name + '\n理由：' + vote.reason + '\n\n';
+        });
+        const confirm = window.confirm('以下の内容で投票します。よろしいですか？\n\n' + vote_string);
+        if (!confirm) {return}
+        const vote_count = self.select_count + (
+          !isNaN(parseInt($('input[name="second_vote"]:checked').val())) ? 1 : 0);
+        const count_check = vote_count === 6 || window.confirm(vote_count + '票しか使っていません。(一人6票)\nこのまま投票しますか？');
+        if (confirm && count_check) {
+          $.ajax({
+            url: location.href,
+            type: 'POST',
+            data: $('#main_form').serialize()
+          }).done(function (res) {
+            if (res.status === 'success') {
+              alert('投票が完了しました')
+            } else {
+              self.errors = res.errors;
+            }
+          })
+        }
+      },
+    },
     template: '' +
-      '<div>' +
-      '  <div v-for="song in songs" v-if="song.show">' +
-      '    <label>' +
-      '      <input type="checkbox" name="first_vote" :value="song.index" v-model="song.checked">' +
-      '      { song.name }' +
-      '    </label><br>' +
-      '    <div class="song-detail" v-show="song.checked">' +
-      '      <label>' +
-      '        <input type="radio" name="second_vote" :value="song.index">' +
-      '        二票目' +
-      '      </label><br>' +
-      '    </div>' +
+      '<form action="" method="post" id="main_form">' +
+      '  <div class="alert alert-danger hidden" id="error" v-if="errors.length > 0">' +
+      '    <span v-for="error in errors">{ error }</span>' +
       '  </div>' +
-      '</div>'
+      '  <div v-for="song in songs">' +
+      '    <div v-if="song.show">' +
+      '      <label>' +
+      '        <input type="checkbox" name="first_vote" :value="song.index" v-model="song.checked" @click="check($event)">' +
+      '        { song.name }' +
+      '      </label><br>' +
+      '      <div class="song-detail" v-show="song.checked">' +
+      '        <input class="form-control" type="text" :name="\'reason_\' + song.index" v-if="song.checked" v-model="song.reason" placeholder="選んだ理由">' +
+      '        <label v-if="select_count < 6">' +
+      '          <input type="radio" name="second_vote" :value="song.index">' +
+      '          二票いれる' +
+      '        </label>' +
+      '        <br>' +
+      '      </div>' +
+      '    </div>' +
+      '    <div class="vspace" v-if="!song.show && song.name == \'----\'"></div>' +
+      '  </div>' +
+      '  <input class="btn btn-success" type="button" @click="submit" value="投票">' +
+      '</form>'
   });
 </script>
 </body>
